@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big Bang - Interactive Particle Explosion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #webcam {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+            height: 150px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transform: scaleX(-1);
+            z-index: 100;
+            object-fit: cover;
+        }
+
+        #handCanvas {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+            height: 150px;
+            border-radius: 12px;
+            transform: scaleX(-1);
+            pointer-events: none;
+            z-index: 101;
+        }
+
+        #ui {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            color: #fff;
+        }
+
+        #controls {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 280px;
+        }
+
+        #controls h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #controls h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin: 15px 0 10px 0;
+        }
+
+        .gesture-list {
+            list-style: none;
+            font-size: 13px;
+            line-height: 2;
+        }
+
+        .gesture-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .gesture-icon {
+            font-size: 20px;
+        }
+
+        #status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        #status span {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #fff;
+        }
+
+        #gestureStatus {
+            color: #ffd93d !important;
+            font-weight: 500;
+        }
+
+        #handStatus.connected {
+            background: rgba(46, 213, 115, 0.3) !important;
+            border: 1px solid rgba(46, 213, 115, 0.5);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #888;
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <video id="webcam" autoplay playsinline></video>
+    <canvas id="handCanvas"></canvas>
+
+    <div id="ui">
+        <div id="controls">
+            <a href="index.html" class="back-link">← Back to Shapes</a>
+            <h2>BIG BANG</h2>
+            <h3>Gesture Controls</h3>
+            <ul class="gesture-list">
+                <li><span class="gesture-icon">✊</span> Fist - Contract to singularity</li>
+                <li><span class="gesture-icon">🖐️</span> Open - Explode outward</li>
+                <li><span class="gesture-icon">👍</span> Thumbs Up - Change colors</li>
+                <li><span class="gesture-icon">✌️</span> Peace - Shockwave effect</li>
+                <li><span class="gesture-icon">🤏</span> Pinch - Reverse time</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="status">
+        <span id="handStatus">Waiting for hand...</span>
+        <span id="gestureStatus">Gesture: None</span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="bigbang.js"></script>
+</body>
+</html>
