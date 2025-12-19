@@ -645,108 +645,109 @@ function drawHandLandmarks(landmarks) {
 
 function detectGesture(landmarks) {
     // MediaPipe Hand Landmarks:
+    // 0: Wrist
     // Thumb: 1-CMC, 2-MCP, 3-IP, 4-TIP
     // Index: 5-MCP, 6-PIP, 7-DIP, 8-TIP
     // Middle: 9-MCP, 10-PIP, 11-DIP, 12-TIP
     // Ring: 13-MCP, 14-PIP, 15-DIP, 16-TIP
     // Pinky: 17-MCP, 18-PIP, 19-DIP, 20-TIP
-    // Note: Y-axis is INVERTED (0=top, 1=bottom)
 
     const wrist = landmarks[0];
 
-    // Thumb landmarks
-    const thumbCMC = landmarks[1];
-    const thumbMCP = landmarks[2];
-    const thumbIP = landmarks[3];
-    const thumbTip = landmarks[4];
+    // Helper function to calculate distance between two points
+    function distance(p1, p2) {
+        return Math.sqrt(
+            Math.pow(p1.x - p2.x, 2) +
+            Math.pow(p1.y - p2.y, 2)
+        );
+    }
 
-    // Index landmarks
-    const indexMCP = landmarks[5];
-    const indexPIP = landmarks[6];
+    // ROTATION-INVARIANT FINGER DETECTION
+    // A finger is EXTENDED if: distance(tip, wrist) > distance(pip, wrist)
+    // A finger is CURLED if: distance(tip, wrist) < distance(pip, wrist)
+    // This works regardless of hand orientation!
+
+    // Index finger
     const indexTip = landmarks[8];
+    const indexPIP = landmarks[6];
+    const indexMCP = landmarks[5];
+    const indexExtended = distance(indexTip, wrist) > distance(indexPIP, wrist);
 
-    // Middle landmarks
-    const middleMCP = landmarks[9];
-    const middlePIP = landmarks[10];
+    // Middle finger
     const middleTip = landmarks[12];
+    const middlePIP = landmarks[10];
+    const middleMCP = landmarks[9];
+    const middleExtended = distance(middleTip, wrist) > distance(middlePIP, wrist);
 
-    // Ring landmarks
-    const ringMCP = landmarks[13];
-    const ringPIP = landmarks[14];
+    // Ring finger
     const ringTip = landmarks[16];
+    const ringPIP = landmarks[14];
+    const ringExtended = distance(ringTip, wrist) > distance(ringPIP, wrist);
 
-    // Pinky landmarks
-    const pinkyMCP = landmarks[17];
-    const pinkyPIP = landmarks[18];
+    // Pinky finger
     const pinkyTip = landmarks[20];
+    const pinkyPIP = landmarks[18];
+    const pinkyExtended = distance(pinkyTip, wrist) > distance(pinkyPIP, wrist);
 
-    // FINGER EXTENSION CHECK: Compare TIP to PIP (not MCP!)
-    // Extended = tip.y < pip.y (tip is ABOVE pip in screen coords)
-    // Curled = tip.y > pip.y (tip is BELOW pip, folded down)
-    const indexExtended = indexTip.y < indexPIP.y;
-    const middleExtended = middleTip.y < middlePIP.y;
-    const ringExtended = ringTip.y < ringPIP.y;
-    const pinkyExtended = pinkyTip.y < pinkyPIP.y;
+    // Thumb landmarks
+    const thumbTip = landmarks[4];
+    const thumbIP = landmarks[3];
+    const thumbMCP = landmarks[2];
 
-    // THUMB CHECK: For thumbs up, thumb must be:
-    // 1. Thumb tip above the INDEX MCP (knuckle) - meaning thumb is raised high
-    // 2. Thumb tip significantly above thumb MCP base
-    // This ensures thumb is actually pointing UP, not just tucked in a fist
-    const thumbAboveHand = thumbTip.y < indexMCP.y - 0.05;  // Thumb tip above index knuckle
-    const thumbExtendedUp = thumbTip.y < thumbMCP.y - 0.08; // Thumb tip well above its base
-    const thumbUp = thumbAboveHand && thumbExtendedUp;
+    // THUMB EXTENDED: thumb tip is far from index MCP (thumb sticking out)
+    // When thumb is tucked in fist, it's close to index MCP
+    const thumbToIndexMCP = distance(thumbTip, indexMCP);
+    const thumbToWrist = distance(thumbTip, wrist);
+    const indexMCPToWrist = distance(indexMCP, wrist);
+
+    // Thumb is extended if tip is far from palm center (index MCP)
+    const thumbExtended = thumbToIndexMCP > 0.1;
 
     // Calculate pinch distance (thumb tip to index tip)
-    const pinchDistance = Math.sqrt(
-        Math.pow(thumbTip.x - indexTip.x, 2) +
-        Math.pow(thumbTip.y - indexTip.y, 2)
-    );
+    const pinchDistance = distance(thumbTip, indexTip);
 
-    // Count curled fingers (4 main fingers, excluding thumb)
+    // Count curled/extended states
     const fingersCurled = !indexExtended && !middleExtended && !ringExtended && !pinkyExtended;
     const fingersExtended = indexExtended && middleExtended && ringExtended && pinkyExtended;
-
-    // Count how many of the 4 fingers are extended
     const extendedCount = [indexExtended, middleExtended, ringExtended, pinkyExtended].filter(Boolean).length;
 
     // ============================================
     // GESTURE DETECTION (order matters!)
     // ============================================
 
-    // Debug: log finger states
+    // Debug logging
     console.log('Fingers - Index:', indexExtended, 'Middle:', middleExtended, 'Ring:', ringExtended, 'Pinky:', pinkyExtended);
-    console.log('ThumbAboveHand:', thumbAboveHand, 'ThumbExtendedUp:', thumbExtendedUp, 'ThumbUp:', thumbUp);
+    console.log('ThumbExtended:', thumbExtended, 'ThumbToIndexMCP:', thumbToIndexMCP.toFixed(3));
     console.log('FingersCurled:', fingersCurled, 'PinchDist:', pinchDistance.toFixed(3));
 
-    // 1. PINCH: Thumb and index tips very close, other fingers extended
-    //    Must check BEFORE fist to avoid confusion
-    if (pinchDistance < 0.07 && (middleExtended || ringExtended || pinkyExtended)) {
-        console.log('Detected: PINCH');
-        return 'pinch';
+    // 1. FIST: All 4 fingers curled AND thumb NOT extended (tucked in)
+    if (fingersCurled && !thumbExtended) {
+        console.log('Detected: FIST');
+        return 'fist';
     }
 
-    // 2. THUMBS UP: Thumb pointing up, all 4 fingers curled
-    if (thumbUp && fingersCurled) {
+    // 2. THUMBS UP: All 4 fingers curled AND thumb IS extended
+    if (fingersCurled && thumbExtended) {
         console.log('Detected: THUMBS UP');
         return 'thumbs_up';
     }
 
-    // 3. OPEN HAND: All 4 fingers extended
+    // 3. PINCH: Thumb and index tips very close
+    if (pinchDistance < 0.08) {
+        console.log('Detected: PINCH');
+        return 'pinch';
+    }
+
+    // 4. OPEN HAND: All 4 fingers extended
     if (fingersExtended) {
         console.log('Detected: OPEN HAND');
         return 'open_hand';
     }
 
-    // 4. PEACE SIGN: Index + middle extended, ring + pinky curled
+    // 5. PEACE SIGN: Index + middle extended, ring + pinky curled
     if (indexExtended && middleExtended && !ringExtended && !pinkyExtended) {
         console.log('Detected: PEACE');
         return 'peace';
-    }
-
-    // 5. FIST: All 4 fingers curled (thumb position doesn't matter)
-    if (fingersCurled) {
-        console.log('Detected: FIST');
-        return 'fist';
     }
 
     console.log('Detected: UNKNOWN');
