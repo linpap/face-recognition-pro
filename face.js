@@ -153,17 +153,22 @@ async function startCamera() {
 
         video.srcObject = stream;
 
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             video.onloadedmetadata = () => {
-                overlay.width = video.videoWidth;
-                overlay.height = video.videoHeight;
-                cameraStatus.classList.add('active');
-                loadingEl.classList.add('hidden');
-                resolve();
+                video.play().then(() => {
+                    overlay.width = video.videoWidth;
+                    overlay.height = video.videoHeight;
+                    cameraStatus.classList.add('active');
+                    loadingEl.classList.add('hidden');
+                    resolve();
+                }).catch(reject);
             };
+            video.onerror = () => reject(new Error('Video failed to load'));
         });
     } catch (error) {
-        loadingEl.innerHTML = `<p style="color:#ff6b6b;">Camera access denied. Please allow camera.</p>`;
+        console.error('Camera error:', error);
+        loadingEl.innerHTML = `<p style="color:#ff6b6b;">Camera access denied. Please allow camera and refresh the page.</p>`;
+        throw error;
     }
 }
 
@@ -172,10 +177,16 @@ async function startCamera() {
 // ============================================
 async function startDetection() {
     if (!modelsLoaded) return;
+    if (!video.videoWidth || !video.videoHeight) {
+        console.error('Video dimensions not ready');
+        return;
+    }
 
     const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
 
     setInterval(async () => {
+        if (video.paused || video.ended || !video.videoWidth) return;
+
         const detections = await faceapi
             .detectAllFaces(video, options)
             .withFaceLandmarks()
