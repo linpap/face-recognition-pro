@@ -646,6 +646,8 @@ function drawHandLandmarks(landmarks) {
 function detectGesture(landmarks) {
     // Get finger tip and base positions
     const thumbTip = landmarks[4];
+    const thumbIP = landmarks[3];
+    const thumbMCP = landmarks[2];
     const indexTip = landmarks[8];
     const middleTip = landmarks[12];
     const ringTip = landmarks[16];
@@ -657,14 +659,17 @@ function detectGesture(landmarks) {
     const pinkyBase = landmarks[17];
     const wrist = landmarks[0];
 
-    // Calculate if fingers are extended
-    const indexExtended = indexTip.y < indexBase.y;
-    const middleExtended = middleTip.y < middleBase.y;
-    const ringExtended = ringTip.y < ringBase.y;
-    const pinkyExtended = pinkyTip.y < pinkyBase.y;
+    // Calculate if fingers are extended (tip above base in screen coords)
+    const indexExtended = indexTip.y < indexBase.y - 0.05;
+    const middleExtended = middleTip.y < middleBase.y - 0.05;
+    const ringExtended = ringTip.y < ringBase.y - 0.05;
+    const pinkyExtended = pinkyTip.y < pinkyBase.y - 0.05;
 
-    // Thumb check (horizontal)
-    const thumbExtended = thumbTip.x < landmarks[3].x;
+    // Thumb up check - thumb tip is above thumb base (pointing up)
+    const thumbUp = thumbTip.y < thumbMCP.y - 0.05;
+
+    // Thumb extended sideways check (works for both hands)
+    const thumbExtendedSideways = Math.abs(thumbTip.x - thumbMCP.x) > 0.08;
 
     // Calculate pinch distance
     const pinchDistance = Math.sqrt(
@@ -672,17 +677,34 @@ function detectGesture(landmarks) {
         Math.pow(thumbTip.y - indexTip.y, 2)
     );
 
-    // Gesture detection
+    // Check if fingers are curled (closed fist position)
+    const fingersCurled = !indexExtended && !middleExtended && !ringExtended && !pinkyExtended;
+
+    // Gesture detection - order matters! More specific gestures first
+
+    // Thumbs up: thumb pointing up, all other fingers curled
+    if (thumbUp && fingersCurled) {
+        return 'thumbs_up';
+    }
+
+    // Pinch: thumb and index close together
+    if (pinchDistance < 0.08) {
+        return 'pinch';
+    }
+
+    // Open hand: all fingers extended
     if (indexExtended && middleExtended && ringExtended && pinkyExtended) {
         return 'open_hand';
-    } else if (!indexExtended && !middleExtended && !ringExtended && !pinkyExtended) {
+    }
+
+    // Fist: all fingers curled, thumb not up
+    if (fingersCurled && !thumbUp) {
         return 'fist';
-    } else if (indexExtended && middleExtended && !ringExtended && !pinkyExtended) {
+    }
+
+    // Peace sign: index and middle extended, others curled
+    if (indexExtended && middleExtended && !ringExtended && !pinkyExtended) {
         return 'peace';
-    } else if (thumbExtended && !indexExtended && !middleExtended && !ringExtended && !pinkyExtended) {
-        return 'thumbs_up';
-    } else if (pinchDistance < 0.08) {
-        return 'pinch';
     }
 
     return 'unknown';
