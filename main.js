@@ -153,9 +153,244 @@ const ShapeGenerators = {
 };
 
 // ============================================
+// PARTICLE TEXTURE GENERATORS (High Quality)
+// ============================================
+function createParticleTexture(type = 'glow', size = 128) {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const center = size / 2;
+    const radius = size / 2 - 4;
+
+    ctx.clearRect(0, 0, size, size);
+
+    switch (type) {
+        case 'glow':
+            // Soft glowing circle with smooth falloff
+            const glowGradient = ctx.createRadialGradient(center, center, 0, center, center, radius);
+            glowGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            glowGradient.addColorStop(0.1, 'rgba(255, 255, 255, 0.9)');
+            glowGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.6)');
+            glowGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
+            glowGradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.1)');
+            glowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = glowGradient;
+            ctx.fillRect(0, 0, size, size);
+            break;
+
+        case 'heart':
+            // High-quality heart shape
+            ctx.save();
+            ctx.translate(center, center + 5);
+            ctx.scale(radius / 20, radius / 20);
+            ctx.beginPath();
+            ctx.moveTo(0, -8);
+            ctx.bezierCurveTo(-12, -20, -24, -5, 0, 15);
+            ctx.bezierCurveTo(24, -5, 12, -20, 0, -8);
+            ctx.closePath();
+
+            // Gradient fill for 3D effect
+            const heartGrad = ctx.createRadialGradient(-5, -5, 0, 0, 0, 25);
+            heartGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            heartGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.8)');
+            heartGrad.addColorStop(1, 'rgba(255, 255, 255, 0.3)');
+            ctx.fillStyle = heartGrad;
+            ctx.fill();
+
+            // Soft glow around heart
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+            ctx.shadowBlur = 15;
+            ctx.fill();
+            ctx.restore();
+            break;
+
+        case 'star':
+            // 5-pointed star
+            ctx.save();
+            ctx.translate(center, center);
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                const outerAngle = (i * 72 - 90) * Math.PI / 180;
+                const innerAngle = ((i * 72) + 36 - 90) * Math.PI / 180;
+                const outerX = Math.cos(outerAngle) * radius;
+                const outerY = Math.sin(outerAngle) * radius;
+                const innerX = Math.cos(innerAngle) * (radius * 0.4);
+                const innerY = Math.sin(innerAngle) * (radius * 0.4);
+
+                if (i === 0) ctx.moveTo(outerX, outerY);
+                else ctx.lineTo(outerX, outerY);
+                ctx.lineTo(innerX, innerY);
+            }
+            ctx.closePath();
+
+            const starGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+            starGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            starGrad.addColorStop(0.6, 'rgba(255, 255, 255, 0.7)');
+            starGrad.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+            ctx.fillStyle = starGrad;
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+            ctx.shadowBlur = 10;
+            ctx.fill();
+            ctx.restore();
+            break;
+
+        case 'flower':
+            // 6-petal flower
+            ctx.save();
+            ctx.translate(center, center);
+            const petalCount = 6;
+            const petalLength = radius * 0.8;
+            const petalWidth = radius * 0.4;
+
+            for (let i = 0; i < petalCount; i++) {
+                ctx.save();
+                ctx.rotate((i * 60) * Math.PI / 180);
+                ctx.beginPath();
+                ctx.ellipse(0, -petalLength / 2, petalWidth / 2, petalLength / 2, 0, 0, Math.PI * 2);
+                const petalGrad = ctx.createRadialGradient(0, -petalLength / 2, 0, 0, -petalLength / 2, petalLength / 2);
+                petalGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+                petalGrad.addColorStop(1, 'rgba(255, 255, 255, 0.3)');
+                ctx.fillStyle = petalGrad;
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // Center of flower
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * 0.2, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+            ctx.fill();
+            ctx.restore();
+            break;
+
+        case 'snowflake':
+            // 6-armed snowflake
+            ctx.save();
+            ctx.translate(center, center);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+            ctx.shadowBlur = 8;
+
+            for (let i = 0; i < 6; i++) {
+                ctx.save();
+                ctx.rotate((i * 60) * Math.PI / 180);
+
+                // Main arm
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, -radius * 0.9);
+                ctx.stroke();
+
+                // Branches
+                ctx.beginPath();
+                ctx.moveTo(0, -radius * 0.4);
+                ctx.lineTo(-radius * 0.2, -radius * 0.6);
+                ctx.moveTo(0, -radius * 0.4);
+                ctx.lineTo(radius * 0.2, -radius * 0.6);
+                ctx.moveTo(0, -radius * 0.65);
+                ctx.lineTo(-radius * 0.15, -radius * 0.8);
+                ctx.moveTo(0, -radius * 0.65);
+                ctx.lineTo(radius * 0.15, -radius * 0.8);
+                ctx.stroke();
+
+                ctx.restore();
+            }
+
+            // Center
+            ctx.beginPath();
+            ctx.arc(0, 0, 4, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+            ctx.fill();
+            ctx.restore();
+            break;
+
+        case 'spark':
+            // Bright spark/firework particle
+            ctx.save();
+            ctx.translate(center, center);
+
+            // Outer glow
+            const sparkGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+            sparkGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            sparkGrad.addColorStop(0.15, 'rgba(255, 255, 255, 0.9)');
+            sparkGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.5)');
+            sparkGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
+            sparkGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = sparkGrad;
+            ctx.fillRect(-radius, -radius, radius * 2, radius * 2);
+
+            // Cross flare
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-radius * 0.7, 0);
+            ctx.lineTo(radius * 0.7, 0);
+            ctx.moveTo(0, -radius * 0.7);
+            ctx.lineTo(0, radius * 0.7);
+            ctx.stroke();
+            ctx.restore();
+            break;
+
+        case 'ring':
+            // Saturn ring particle
+            const ringGrad = ctx.createRadialGradient(center, center, radius * 0.5, center, center, radius);
+            ringGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+            ringGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.8)');
+            ringGrad.addColorStop(0.5, 'rgba(255, 255, 255, 1)');
+            ringGrad.addColorStop(0.7, 'rgba(255, 255, 255, 0.8)');
+            ringGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = ringGrad;
+            ctx.fillRect(0, 0, size, size);
+            break;
+
+        default:
+            // Default soft circle
+            const defaultGrad = ctx.createRadialGradient(center, center, 0, center, center, radius);
+            defaultGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            defaultGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
+            defaultGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = defaultGrad;
+            ctx.fillRect(0, 0, size, size);
+    }
+
+    return canvas;
+}
+
+// Store textures for each template
+const particleTextures = {};
+
+function getTextureForTemplate(template) {
+    const textureMap = {
+        hearts: 'heart',
+        flowers: 'flower',
+        saturn: 'glow',
+        fireworks: 'spark',
+        stars: 'star',
+        snowflakes: 'snowflake'
+    };
+    return textureMap[template] || 'glow';
+}
+
+function loadParticleTextures() {
+    const types = ['glow', 'heart', 'star', 'flower', 'snowflake', 'spark', 'ring'];
+    types.forEach(type => {
+        const canvas = createParticleTexture(type, 128);
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.needsUpdate = true;
+        particleTextures[type] = texture;
+    });
+}
+
+// ============================================
 // THREE.JS SETUP
 // ============================================
 function initThree() {
+    // Load textures first
+    loadParticleTextures();
+
     // Scene
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a0a0f);
@@ -242,23 +477,36 @@ function createParticleSystem() {
     particleGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
     particleGeometry.setAttribute('alpha', new THREE.BufferAttribute(alphas, 1));
 
-    // Use PointsMaterial for better compatibility
+    // Use PointsMaterial with high-quality texture
+    const textureType = getTextureForTemplate(currentTemplate);
     particleMaterial = new THREE.PointsMaterial({
-        size: CONFIG.baseSize * 3,
+        size: CONFIG.baseSize * 5,
+        map: particleTextures[textureType],
         vertexColors: true,
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.9,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-        sizeAttenuation: true
+        sizeAttenuation: true,
+        alphaTest: 0.01
     });
 
     particleSystem = new THREE.Points(particleGeometry, particleMaterial);
     scene.add(particleSystem);
 }
 
+// Function to update particle texture when template changes
+function updateParticleTexture(template) {
+    const textureType = getTextureForTemplate(template);
+    particleMaterial.map = particleTextures[textureType];
+    particleMaterial.needsUpdate = true;
+}
+
 function updateParticlePositions(template) {
     currentTemplate = template;
+
+    // Update texture for the new template
+    updateParticleTexture(template);
 
     for (let i = 0; i < CONFIG.particleCount; i++) {
         const newPos = ShapeGenerators[template](i, CONFIG.particleCount);
@@ -487,7 +735,7 @@ function animate() {
     currentExpansion += (targetExpansion - currentExpansion) * 0.05;
 
     // Update particle size based on expansion
-    particleMaterial.size = CONFIG.baseSize * 3 * currentExpansion;
+    particleMaterial.size = CONFIG.baseSize * 5 * currentExpansion;
 
     // Update particle positions with interpolation
     const positions = particleGeometry.attributes.position.array;
