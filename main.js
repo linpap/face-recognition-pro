@@ -677,16 +677,24 @@ function detectGesture(landmarks) {
     // Check if fingers are curled (closed fist position)
     const fingersCurled = !indexExtended && !middleExtended && !ringExtended && !pinkyExtended;
 
+    // Check how many fingers are extended
+    const extendedCount = [indexExtended, middleExtended, ringExtended, pinkyExtended].filter(Boolean).length;
+
     // Gesture detection - order matters! More specific gestures first
 
-    // Pinch: thumb and index close together
-    if (pinchDistance < 0.08) {
-        return 'pinch';
+    // Fist: all fingers curled - check this FIRST
+    if (fingersCurled && !thumbUp) {
+        return 'fist';
     }
 
     // Thumbs up: thumb pointing clearly up, all other fingers curled
     if (thumbUp && fingersCurled) {
         return 'thumbs_up';
+    }
+
+    // Pinch: thumb and index close together, but not a fist
+    if (pinchDistance < 0.08 && extendedCount >= 1) {
+        return 'pinch';
     }
 
     // Open hand: all fingers extended
@@ -697,11 +705,6 @@ function detectGesture(landmarks) {
     // Peace sign: index and middle extended, others curled
     if (indexExtended && middleExtended && !ringExtended && !pinkyExtended) {
         return 'peace';
-    }
-
-    // Fist: all fingers curled (thumb position doesn't matter)
-    if (fingersCurled) {
-        return 'fist';
     }
 
     return 'unknown';
