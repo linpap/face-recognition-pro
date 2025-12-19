@@ -23,7 +23,7 @@ let currentTemplate = 'hearts';
 let targetPositions = [];
 let currentColorScheme = 0;
 let gestureState = {
-    isExpanded: false,
+    expansionState: 'normal', // 'normal', 'expanded', 'contracted'
     colorCycling: false,
     speedMultiplier: 1,
     handPosition: { x: 0, y: 0, z: 0 }
@@ -713,11 +713,11 @@ function applyGestureEffect(gesture, landmarks) {
     switch (gesture) {
         case 'open_hand':
             statusEl.textContent = 'Gesture: Open Hand (Expand)';
-            gestureState.isExpanded = true;
+            gestureState.expansionState = 'expanded';
             break;
         case 'fist':
             statusEl.textContent = 'Gesture: Fist (Contract)';
-            gestureState.isExpanded = false;
+            gestureState.expansionState = 'contracted';
             break;
         case 'peace':
             statusEl.textContent = 'Gesture: Peace (Color Change)';
@@ -739,6 +739,7 @@ function applyGestureEffect(gesture, landmarks) {
         default:
             statusEl.textContent = 'Gesture: Detecting...';
             gestureState.speedMultiplier = 1;
+            gestureState.expansionState = 'normal';
     }
 }
 
@@ -753,9 +754,23 @@ function animate() {
 
     time += 0.016 * gestureState.speedMultiplier;
 
-    // Calculate target expansion
-    const targetExpansion = gestureState.isExpanded ? CONFIG.expansionFactor : 1.0;
-    currentExpansion += (targetExpansion - currentExpansion) * 0.05;
+    // Calculate target expansion based on gesture state
+    let targetExpansion;
+    let targetPositionMult;
+    switch (gestureState.expansionState) {
+        case 'expanded':
+            targetExpansion = CONFIG.expansionFactor;
+            targetPositionMult = 1.8;
+            break;
+        case 'contracted':
+            targetExpansion = 0.4;
+            targetPositionMult = 0.3;
+            break;
+        default:
+            targetExpansion = 1.0;
+            targetPositionMult = 1.0;
+    }
+    currentExpansion += (targetExpansion - currentExpansion) * 0.08;
 
     // Update particle size based on expansion
     particleMaterial.size = CONFIG.baseSize * 2.5 * currentExpansion;
@@ -772,8 +787,8 @@ function animate() {
         particle.currentPos.y += (target.y - particle.currentPos.y) * 0.02;
         particle.currentPos.z += (target.z - particle.currentPos.z) * 0.02;
 
-        // Apply expansion when gesture detected
-        let expansionMult = gestureState.isExpanded ? 1.5 : 1.0;
+        // Apply expansion/contraction multiplier
+        let expansionMult = targetPositionMult;
 
         // Add subtle floating animation
         const floatX = Math.sin(time + particle.phase) * 0.1;
