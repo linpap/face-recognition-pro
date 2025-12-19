@@ -688,12 +688,13 @@ function detectGesture(landmarks) {
     const ringExtended = ringTip.y < ringPIP.y;
     const pinkyExtended = pinkyTip.y < pinkyPIP.y;
 
-    // THUMB CHECK: Thumb moves horizontally, not vertically
-    // For thumb up gesture: thumb tip should be significantly ABOVE thumb IP
-    const thumbUp = thumbTip.y < thumbIP.y - 0.05;
-
-    // For thumb curled (in fist): thumb tip is to the side/below
-    const thumbCurled = thumbTip.y > thumbIP.y;
+    // THUMB CHECK: For thumbs up, thumb must be:
+    // 1. Thumb tip above the INDEX MCP (knuckle) - meaning thumb is raised high
+    // 2. Thumb tip significantly above thumb MCP base
+    // This ensures thumb is actually pointing UP, not just tucked in a fist
+    const thumbAboveHand = thumbTip.y < indexMCP.y - 0.05;  // Thumb tip above index knuckle
+    const thumbExtendedUp = thumbTip.y < thumbMCP.y - 0.08; // Thumb tip well above its base
+    const thumbUp = thumbAboveHand && thumbExtendedUp;
 
     // Calculate pinch distance (thumb tip to index tip)
     const pinchDistance = Math.sqrt(
@@ -714,7 +715,8 @@ function detectGesture(landmarks) {
 
     // Debug: log finger states
     console.log('Fingers - Index:', indexExtended, 'Middle:', middleExtended, 'Ring:', ringExtended, 'Pinky:', pinkyExtended);
-    console.log('ThumbUp:', thumbUp, 'FingersCurled:', fingersCurled, 'PinchDist:', pinchDistance.toFixed(3));
+    console.log('ThumbAboveHand:', thumbAboveHand, 'ThumbExtendedUp:', thumbExtendedUp, 'ThumbUp:', thumbUp);
+    console.log('FingersCurled:', fingersCurled, 'PinchDist:', pinchDistance.toFixed(3));
 
     // 1. PINCH: Thumb and index tips very close, other fingers extended
     //    Must check BEFORE fist to avoid confusion
