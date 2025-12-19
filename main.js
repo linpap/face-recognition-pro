@@ -155,7 +155,7 @@ const ShapeGenerators = {
 // ============================================
 // PARTICLE TEXTURE GENERATORS (High Quality)
 // ============================================
-function createParticleTexture(type = 'glow', size = 128) {
+function createParticleTexture(type = 'glow', size = 256) {
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
@@ -377,8 +377,12 @@ function getTextureForTemplate(template) {
 function loadParticleTextures() {
     const types = ['glow', 'heart', 'star', 'flower', 'snowflake', 'spark', 'ring'];
     types.forEach(type => {
-        const canvas = createParticleTexture(type, 128);
+        const canvas = createParticleTexture(type, 256);
         const texture = new THREE.CanvasTexture(canvas);
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.format = THREE.RGBAFormat;
+        texture.generateMipmaps = true;
         texture.needsUpdate = true;
         particleTextures[type] = texture;
     });
@@ -480,15 +484,15 @@ function createParticleSystem() {
     // Use PointsMaterial with high-quality texture
     const textureType = getTextureForTemplate(currentTemplate);
     particleMaterial = new THREE.PointsMaterial({
-        size: CONFIG.baseSize * 5,
+        size: CONFIG.baseSize * 2.5,
         map: particleTextures[textureType],
         vertexColors: true,
         transparent: true,
-        opacity: 0.9,
+        opacity: 0.85,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         sizeAttenuation: true,
-        alphaTest: 0.01
+        alphaTest: 0.001
     });
 
     particleSystem = new THREE.Points(particleGeometry, particleMaterial);
@@ -735,7 +739,7 @@ function animate() {
     currentExpansion += (targetExpansion - currentExpansion) * 0.05;
 
     // Update particle size based on expansion
-    particleMaterial.size = CONFIG.baseSize * 5 * currentExpansion;
+    particleMaterial.size = CONFIG.baseSize * 2.5 * currentExpansion;
 
     // Update particle positions with interpolation
     const positions = particleGeometry.attributes.position.array;
