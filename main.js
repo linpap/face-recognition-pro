@@ -665,11 +665,8 @@ function detectGesture(landmarks) {
     const ringExtended = ringTip.y < ringBase.y - 0.05;
     const pinkyExtended = pinkyTip.y < pinkyBase.y - 0.05;
 
-    // Thumb up check - thumb tip is above thumb base (pointing up)
-    const thumbUp = thumbTip.y < thumbMCP.y - 0.05;
-
-    // Thumb extended sideways check (works for both hands)
-    const thumbExtendedSideways = Math.abs(thumbTip.x - thumbMCP.x) > 0.08;
+    // Thumb up check - thumb tip is significantly above thumb base (pointing up)
+    const thumbUp = thumbTip.y < thumbMCP.y - 0.1;
 
     // Calculate pinch distance
     const pinchDistance = Math.sqrt(
@@ -682,14 +679,14 @@ function detectGesture(landmarks) {
 
     // Gesture detection - order matters! More specific gestures first
 
-    // Thumbs up: thumb pointing up, all other fingers curled
-    if (thumbUp && fingersCurled) {
-        return 'thumbs_up';
-    }
-
     // Pinch: thumb and index close together
     if (pinchDistance < 0.08) {
         return 'pinch';
+    }
+
+    // Thumbs up: thumb pointing clearly up, all other fingers curled
+    if (thumbUp && fingersCurled) {
+        return 'thumbs_up';
     }
 
     // Open hand: all fingers extended
@@ -697,14 +694,14 @@ function detectGesture(landmarks) {
         return 'open_hand';
     }
 
-    // Fist: all fingers curled, thumb not up
-    if (fingersCurled && !thumbUp) {
-        return 'fist';
-    }
-
     // Peace sign: index and middle extended, others curled
     if (indexExtended && middleExtended && !ringExtended && !pinkyExtended) {
         return 'peace';
+    }
+
+    // Fist: all fingers curled (thumb position doesn't matter)
+    if (fingersCurled) {
+        return 'fist';
     }
 
     return 'unknown';
