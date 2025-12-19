@@ -712,32 +712,42 @@ function detectGesture(landmarks) {
     // GESTURE DETECTION (order matters!)
     // ============================================
 
+    // Debug: log finger states
+    console.log('Fingers - Index:', indexExtended, 'Middle:', middleExtended, 'Ring:', ringExtended, 'Pinky:', pinkyExtended);
+    console.log('ThumbUp:', thumbUp, 'FingersCurled:', fingersCurled, 'PinchDist:', pinchDistance.toFixed(3));
+
     // 1. PINCH: Thumb and index tips very close, other fingers extended
     //    Must check BEFORE fist to avoid confusion
     if (pinchDistance < 0.07 && (middleExtended || ringExtended || pinkyExtended)) {
+        console.log('Detected: PINCH');
         return 'pinch';
     }
 
     // 2. THUMBS UP: Thumb pointing up, all 4 fingers curled
     if (thumbUp && fingersCurled) {
+        console.log('Detected: THUMBS UP');
         return 'thumbs_up';
     }
 
     // 3. OPEN HAND: All 4 fingers extended
     if (fingersExtended) {
+        console.log('Detected: OPEN HAND');
         return 'open_hand';
     }
 
     // 4. PEACE SIGN: Index + middle extended, ring + pinky curled
     if (indexExtended && middleExtended && !ringExtended && !pinkyExtended) {
+        console.log('Detected: PEACE');
         return 'peace';
     }
 
     // 5. FIST: All 4 fingers curled (thumb position doesn't matter)
     if (fingersCurled) {
+        console.log('Detected: FIST');
         return 'fist';
     }
 
+    console.log('Detected: UNKNOWN');
     return 'unknown';
 }
 
